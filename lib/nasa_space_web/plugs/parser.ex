@@ -6,25 +6,44 @@ defmodule NasaSpaceWeb.Plugs.Parser do
   def call(conn, _params) do
     with(
       {:ok, body, _conn} <- Plug.Conn.read_body(conn),
-      body_params <- JSON.decode!(body)
+      body_params <- JSON.decode!(body),
+      {:ok, flight_path} <- format_flight_path(body_params)
     ) do
+      body_params = Map.put(body_params, "flight_path", flight_path)
+
       conn
       |> Plug.Conn.assign(:params_body, body_params)
     else
-      error = {:error, _error_type, _err} ->
+      _err ->
         conn
-        |> send_resp(400, error)
+        |> Plug.Conn.resp(400, "Invalid params")
+        |> Plug.Conn.send_resp()
         |> halt
     end
   end
 
-  defp format_flight_path(%{"flight_path" => flight_path} = _body_params) do
-    Enum.map(flight_path, fn path ->
-      convert_to_klist(path)
-    end)
+  defp format_flight_path(%{"flight_path" => flight_path, "mass" => _mass} = _body_params) do
+    flight_path =
+      Enum.map(flight_path, fn x ->
+        path_atom(x)
+      end)
+
+    {:ok, flight_path}
   end
 
-  def convert_to_klist(map) do
-    Enum.map(map, fn {key, value} -> {String.to_existing_atom(key), value} end) |> List.to_tuple()
+  defp format_flight_path(_body_params) do
+    {:error, :missing_params}
+  end
+
+  defp path_atom(%{"launch" => gravity}) do
+    {:launch, gravity}
+  end
+
+  defp path_atom(%{"land" => gravity}) do
+    {:land, gravity}
+  end
+
+  defp path_atom(_path) do
+    {:error, :invalid_directive}
   end
 end

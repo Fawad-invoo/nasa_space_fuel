@@ -9,8 +9,9 @@ defmodule NasaSpace.Fuel.FuelCalulation do
 
   alias NasaSpace.FlightRouteRecursion
 
-  def calculate_fuel(mass, flight_route) do
-    FlightRouteRecursion.each(flight_route, mass)
+  def calculate_fuel(%{"mass" => mass, "flight_path" => flight_route}) do
+    reverse_path = Enum.reverse(flight_route)
+    FlightRouteRecursion.each(reverse_path, mass, {:ok, mass})
   end
 
   @doc """
@@ -19,35 +20,39 @@ defmodule NasaSpace.Fuel.FuelCalulation do
       ## Land Formula
       - mass * gravity * 0.033 - 42
   """
+
   def directive({:launch, gravity}, mass) do
-    fuel_estimate = mass * gravity * 0.042 - 33
+    fuel_estimate = trunc(mass * gravity * 0.042 - 33)
     additional_fuel = directive_additional_fuel(fuel_estimate, gravity, :launch)
     launch_fuel_estimate = additional_fuel + fuel_estimate
     {:ok, launch_fuel_estimate}
   end
 
   def directive({:land, gravity}, mass) do
-    fuel_estimate = mass * gravity * 0.033 - 42
+    fuel_estimate = trunc(mass * gravity * 0.033 - 42)
     additional_fuel = directive_additional_fuel(fuel_estimate, gravity, :land)
     land_fuel_estimate = additional_fuel + fuel_estimate
     {:ok, land_fuel_estimate}
   end
 
-  def directive({:_, _gravity}, _mass) do
+  def directive(_, _mass) do
     {:error, :invalid_directive}
   end
 
   defp directive_additional_fuel(mass, gravity, directive, additonal_fuel \\ 0) when mass > 0 do
     fuel_estimate =
       case directive do
-        :launch -> mass * gravity * 0.042 - 33
-        :land -> mass * gravity * 0.033 - 42
+        :launch -> trunc(mass * gravity * 0.042 - 33)
+        :land -> trunc(mass * gravity * 0.033 - 42)
       end
 
-    IO.inspect(gravity, label: "gravity")
-    IO.inspect(mass, label: "mass")
-    IO.inspect(fuel_estimate, label: "launch_land")
-    additonal_fuel = fuel_estimate + additonal_fuel
+    additonal_fuel =
+      if fuel_estimate > 0 do
+        fuel_estimate + additonal_fuel
+      else
+        additonal_fuel
+      end
+
     directive_additional_fuel(fuel_estimate, gravity, directive, additonal_fuel)
   end
 

@@ -9,10 +9,11 @@ defmodule NasaSpaceWeb.FuelController do
   end
 
   def calculate_fuel_for_trip(conn, _params) do
-    flight_path = [{{:launch, 9.807}}, {{:land, 1.62}}, {{:launch, 1.62}}, {{:land, 9.807}}]
-    mass = 28801
-    case FuelCalulation.calculate_fuel(mass, flight_path) do
-      {:ok, fuel_estimate} -> render(conn, "show.json", fuel_estimate: fuel_estimate)
+    params = conn.assigns.params_body
+    mass = Map.get(params, "mass")
+
+    case FuelCalulation.calculate_fuel(params) do
+      {:ok, fuel_estimate} -> render(conn, "show.json", fuel_estimate: fuel_estimate - mass)
       {:error, message} -> error(conn, message)
     end
   end
