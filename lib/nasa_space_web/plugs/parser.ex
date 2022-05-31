@@ -1,4 +1,11 @@
 defmodule NasaSpaceWeb.Plugs.Parser do
+  @moduledoc """
+      This Plug validate params keys & update input format
+      
+      ** Input Format [%{"launch" => 9.807},{"land" => 1.62},{"launch" => 1.62},{"land" => 9.807}]
+
+      ** Ouput Format [{:launch , 9.807},{:land , 1.62},{:launch , 1.62},{land , 9.807}]
+  """
   import Plug.Conn
 
   def init(params), do: params
