@@ -7,6 +7,31 @@ To start your Phoenix server:
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
+- Fuel calculation endpoint http://localhost:4000/fuel_calculate
+
+- `curl --location --request GET 'http://localhost:4000/fuel_calculate' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "mass": 28801,
+    "flight_path": [
+        {
+            "launch": 9.807
+        },
+        {
+            "land": 1.62
+        },
+        {
+            "launch": 1.62
+        },
+        {
+            "land": 9.807
+        }
+    ]
+}'`
+# Tests
+
+- Run mix test to validate all test cases
+
 Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
 ## Learn more
