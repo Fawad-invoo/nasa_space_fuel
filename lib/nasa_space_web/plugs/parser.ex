@@ -29,13 +29,18 @@ defmodule NasaSpaceWeb.Plugs.Parser do
     end
   end
 
+  @doc """
+   validate params keys & reverse path
+  """
   defp format_flight_path(%{"flight_path" => flight_path, "mass" => _mass} = _body_params) do
-    flight_path =
-      Enum.map(flight_path, fn x ->
-        path_atom(x)
-      end)
-
-    {:ok, flight_path}
+    flight_path
+    |> Enum.reduce_while([], fn item, acc ->
+      case path_atom(item) do
+        error = {:error, message} -> {:halt, {:error, error}}
+        path -> {:cont, [path | acc]}
+      end
+    end)
+    |> reduce_while_check()
   end
 
   defp format_flight_path(_body_params) do
@@ -52,5 +57,13 @@ defmodule NasaSpaceWeb.Plugs.Parser do
 
   defp path_atom(_path) do
     {:error, :invalid_directive}
+  end
+
+  defp reduce_while_check({:error, message} = error) do
+    error
+  end
+
+  defp reduce_while_check(result) do
+    {:ok, result}
   end
 end

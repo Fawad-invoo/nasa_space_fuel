@@ -1,36 +1,27 @@
 defmodule NasaSpace.FlightRouteRecursion do
   alias NasaSpace.Fuel.FuelCalulation
 
-  # directive_fuel is mass
-  def each([head | tail], mass, directive_fuel) do
-    IO.inspect(mass, label: "mass")
-    directive_fuel_additional = FuelCalulation.directive(head, mass)
-
-    tail =
-      case directive_fuel_additional do
-        {:error, _} -> []
-        {:ok, _fuel} -> tail
-      end
-
-    updated_fuel = add_fuel(directive_fuel, directive_fuel_additional)
-    IO.inspect(updated_fuel, label: "updated_fuel")
-    IO.inspect("###########")
-    each(tail, elem(updated_fuel, 1), updated_fuel)
+  def each([head | tail], mass) do
+    with(
+      {:ok, directive_fuel_additional} <- FuelCalulation.directive(head, mass),
+      {:ok, updated_fuel} = add_fuel(mass, directive_fuel_additional)
+    ) do
+      each(tail, updated_fuel)
+    else
+      err ->
+        {:error, err}
+    end
   end
 
-  def each([], _mass, directive_fuel) do
-    directive_fuel
+  def each([], updated_fuel) do
+    {:ok, updated_fuel}
   end
 
   @doc """
-    Add current fuel and previous fuel
+    Add current fuel and previous fuel_mass
   """
-  def add_fuel({:ok, prev_fuel}, {:ok, curr_fuel}) do
-    IO.inspect(prev_fuel, label: "prev")
-    IO.inspect(curr_fuel, label: "curr")
-    curr_fuel = prev_fuel + curr_fuel
+  def add_fuel(prev_fuel_mass, curr_fuel) do
+    curr_fuel = prev_fuel_mass + curr_fuel
     {:ok, curr_fuel}
   end
-
-  def add_fuel(_prev_fuel, _current_fuel), do: {:error, :invalid_key}
 end

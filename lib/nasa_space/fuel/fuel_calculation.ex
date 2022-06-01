@@ -10,8 +10,7 @@ defmodule NasaSpace.Fuel.FuelCalulation do
   alias NasaSpace.FlightRouteRecursion
 
   def calculate_fuel(%{"mass" => mass, "flight_path" => flight_route}) do
-    reverse_path = Enum.reverse(flight_route)
-    FlightRouteRecursion.each(reverse_path, mass, {:ok, mass})
+    FlightRouteRecursion.each(flight_route, mass)
   end
 
   @doc """
@@ -35,7 +34,7 @@ defmodule NasaSpace.Fuel.FuelCalulation do
     {:ok, land_fuel_estimate}
   end
 
-  def directive(_, _mass) do
+  def directive(_path, _mass) do
     {:error, :invalid_directive}
   end
 
@@ -58,12 +57,5 @@ defmodule NasaSpace.Fuel.FuelCalulation do
 
   defp directive_additional_fuel(mass, gravity, directive, additonal_fuel) do
     additonal_fuel
-  end
-
-  defp validate_fuel_calclation_params(%{"mass" => mass, "flight_path" => flight_path} = params),
-    do: {:ok, params}
-
-  defp validate_fuel_calclation_params(_params) do
-    {:errror, :invalid_params}
   end
 end
